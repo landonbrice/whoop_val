@@ -106,7 +106,7 @@ Individual options: Healthcare/reimbursement (20-30% — **upgraded by CMS Innov
 - ~~Was there any financing activity during the 2022-2025 gap?~~ → **Yes: 5 interim rounds** including mezzanine ($35.77M, May 2023), debt ($10.13M, Mar 2024), and later-stage VC (Jan 2025). Cap IQ shows Growth rounds in Aug 2023 and May 2024 with no change in common shares (likely non-dilutive).
 
 ### Partially Answered (Session 1)
-- Cohort retention by tenure → **Directional only:** >80-85% annual retention, monthly churn <3% (Pro tier), monthly subscribers churn up to 10x faster than annual. **No cohort-level data.** Churn sensitivity grids built in `research/revenue-bookings-reconciliation.md`. Still the #1 gap.
+- Cohort retention by tenure → **Directional only:** >80-85% annual retention, monthly churn <3% (Pro tier), monthly subscribers churn up to 10x faster than annual. **No cohort-level data.** Full WHOOP-specific cohort framework now in `research/whoop-churn-dynamics.md` (May 2026) — replaces flat-annual approach with tenure-aged curve, peer overlays (Spotify/Strava/Peloton), hardware-cycle interaction, and engaged-vs-billed member tracking. Still the #1 gap on the data side; framework now defensible.
 - Hardware BOM cost → **2016 BOM was $250-$300/device** (Contrary Research). Current BOM unknown but likely $50-80 at scale given 10x processor efficiency gains and volume. **Estimated ~19-month payback period** on hardware subsidy.
 - R19 ARPU decomposition → **Bottom-up model built:** blended subscription ARPU ~$262/yr (mid-market tier mix); total ARPU including Labs/accessories ~$302/yr. The $440 implied ARPU from bookings math is an artifact of the bookings definition, not real per-member revenue. See `research/revenue-bookings-reconciliation.md`.
 
@@ -157,6 +157,7 @@ Individual options: Healthcare/reimbursement (20-30% — **upgraded by CMS Innov
 | 23 | `research/peloton-10k-gaps.md` — S&M vs G&A split (XBRL), SBC history | **Complete — Session 2** |
 | 24 | `research/secondary-market-pricing.md` — Forge/Hiive/EquityZen, DLOM analysis | **Complete — Session 2** |
 | 25 | `research/precedent-transactions.md` — 14 deals, 3-bucket M&A analysis | **Complete — Session 2** |
+| 26 | `research/whoop-churn-dynamics.md` — cohort-aged churn framework, peer overlays, hardware-cycle risk | **Complete — May 2026** |
 
 ---
 
@@ -218,6 +219,61 @@ Individual options: Healthcare/reimbursement (20-30% — **upgraded by CMS Innov
 - **Do not average Bucket 2 comps.** Peloton and Spotify are disaggregated; the range is the insight.
 - **Do not sum real-option expected values as if independent.** Options are correlated; model as clusters.
 - **Do not report a single probability-weighted EV as "the answer."** Report all scenarios + weight sensitivity.
+- **Do not model churn as a flat annual rate.** Use a cohort-aged curve: month 1-3 churn is ~4-5%/mo (~50% annualized), month 4-12 ~2-2.5%/mo, year 2 ~1.5-2%/mo, year 3+ ~1-1.5%/mo. Blended annual churn is endogenous to cohort age mix and rises during hypergrowth as new cohorts dominate the base.
+- **Do not apply ARPU to year-end member count.** ARPU is recognized revenue per *average* member during the period. End-of-period × ARPU systematically overstates revenue and creates a phantom $100M+ inconsistency.
+
+---
+
+## Model Rebuild Directives (Handoff to Next Agent — May 2026)
+
+The current `model/whoop-master-model.xlsx` and `model/build_master_model.py` have known issues that must be addressed in the rebuild. Read these before touching the model.
+
+### 1. ARPU Decomposition (R4) — Replace lump non-sub line with 5-component build
+
+The current model has Subscription ARPU ($262 base) + a single "Non-Sub ARPU" lump ($40). Replace with the v2 build:
+
+| Component | $/member/yr | Confidence | Basis |
+|---|---|---|---|
+| Base subscription (Core ~$239, weighted for monthly payers) | $255-270 | Medium | Pricing page + plan mix estimate |
+| Tier premium (Peak/Life upgrade above Core) | $15-30 | **Low** | Est. 30% on higher tiers, $50-100 premium |
+| Accessories/straps | $20-35 | **Low** | Product catalog, estimated replacement cycle |
+| Advanced Labs (attach × avg test) | $10-30 | **Very low** | 5-10% attach × $200-400 avg |
+| Other (WHOOP Coach in sub, Unite B2B excluded from per-consumer) | $0-10 | **Very low** | Marginal |
+| **Blended ARPU** | **$300-375** | | |
+
+**Bear/base/bull range:** Use $300 / $338 / $375 (replaces current 280/302/330). Restore the wider sensitivity that the prior build trimmed without rationale.
+
+**Critical fix:** Add a note next to R4 in the assumptions sheet: *"ARPU applies to AVERAGE members during the period (~2.25M for 2025), NOT year-end (2.5M). $302 × 2.5M overstates revenue by ~$100M."*
+
+### 2. Churn (R10) — Replace flat annual with cohort-aged curve
+
+Current model uses flat 22 / 17 / 12% annual. This is structurally wrong for a hypergrowth business — new cohorts churn 3-5x faster than year-3+ cohorts, and WHOOP's forecast adds ~2M members in 2026-27 (year-1 cohorts dominate the base).
+
+**Required architecture:**
+- Track cohort vintages (year of acquisition) separately
+- Apply tenure-based monthly churn curve to each cohort:
+  - Months 1-3: 4.0-5.0%/mo (highest drop-off, "trial" period)
+  - Months 4-12: 2.0-2.5%/mo (habit formation, some seasonal attrition)
+  - Year 2: 1.5-2.0%/mo (committed users, data lock-in)
+  - Year 3+: 1.0-1.5%/mo (power users, very sticky)
+- Blended annual churn becomes endogenous output, not input
+
+**Bear/base/bull anchors for the cohort curve:**
+- Bull: WHOOP marketing claim holds (>85% 12-mo retention); Y3+ at 1.0%/mo
+- Base: Sacra envelope (80-85% 12-mo retention); Y3+ at 1.25%/mo
+- Bear: Peloton trajectory overlay (deteriorates from 0.73% → 1.8%/mo over 4 years)
+
+**The "<3% monthly Pro tier" stat is being misused as if it were blended.** Pro is the premium tier; blended is plausibly 3-4%/mo, not 1.5%. Pressure-test on the bear side.
+
+### 3. Internal consistency check the rebuild must pass
+
+R3 (avg members) × R4 (blended ARPU) **must equal** R1 (recognized revenue) within ±5%. Current model fails this check at 2.5M × $302 = $755M vs. $650M revenue. Rebuild should:
+- Drive R3 off member-rolling-average, not year-end snapshot
+- Make one of {R1, R3 avg, R4} a derived cell, not three independent inputs
+
+### 4. Pending deep-dive output
+
+`research/whoop-churn-dynamics.md` (in progress, May 2026) will contain the full WHOOP-specific churn analysis. Reference it before locking R10/R11 ranges.
 
 ---
 

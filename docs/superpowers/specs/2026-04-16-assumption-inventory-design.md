@@ -72,14 +72,14 @@ transactions and remains a non-zero-probability tail scenario.
 | R1 | 2025 revenue run-rate | $1.1B (given) | Critical | All 5 | CEO statement / Series G press | — | **Locked** |
 | R2 | 2025 recognized revenue | $260M | High | DCF, Comps | Getlatka, press reports | Triangulate from R1 | Tier 2 |
 | R3 | Paying members (current) | 2.5M+ | Critical | DCF build-up | Series G press release | Pitchbook | Tier 1 |
-| R4 | Effective ARPU | ~$440/yr implied | Critical | DCF build-up | Back-solve from R1/R3 | Subscription pricing page | Tier 3 |
+| R4 | Effective ARPU | **REVISED v2: $300/$338/$375 blended (5-component build)** | Critical | DCF build-up | Bottom-up tier × payment mix | Subscription pricing page | Tier 3 — see v2 build below |
 | R5 | Subscription revenue % | ~85% | High | DCF, Comps | Business model analysis, press | Sacra equity research | Tier 2 |
 | R6 | YoY subscription growth | 103% (2025) | Critical | DCF Phase 1, Comps | Series G press release | — | **Locked** |
 | R7 | Growth deceleration curve (Phase 1-2-3) | TBD | Critical | DCF | Peer trajectories post-IPO (Peloton, Dexcom, Netflix) | Sell-side growth decay models | **Unsourced** |
 | R8 | Non-subscription revenue mix | ~15% (accessories, Labs, Unite) | Medium | DCF | Press, product pricing page | Estimate from total minus sub | Tier 3 |
 | R9 | International vs. domestic split | Heavily US-weighted, 56 countries | High | DCF, Real Options | Pitchbook, press | Peer int'l revenue splits | **Unsourced** |
 | R10 | B2B/Unite revenue contribution | Unknown | Medium | DCF, Real Options | Pitchbook | Press mentions only | **Unsourced** |
-| R11 | Churn rate by cohort (year 1, 2, 3+) | >80% retention implies <20% annual; need cohort curve | **Critical** | DCF, Comps (quality adj) | Pitchbook tearsheet, S-1 when filed | Peer churn curves (Peloton S-1, Oura estimates) | **Unsourced — top priority** |
+| R11 | Churn rate by cohort (year 1, 2, 3+) | **REVISED v2: cohort-aged curve required, NOT flat annual.** Months 1-3: 4-5%/mo; Months 4-12: 2-2.5%/mo; Year 2: 1.5-2%/mo; Year 3+: 1-1.5%/mo. Blended annual is endogenous output. | **Critical** | DCF, Comps (quality adj) | Pitchbook tearsheet, S-1 when filed | Peer churn curves (Peloton S-1, Oura estimates) | **Unsourced — top priority; flat-annual implementation in current model is broken, see v2 directives below** |
 | R12 | Gross adds vs. net adds | Unknown | **Critical** | DCF member build | Pitchbook, press on member milestones | Back-solve: 2.5M members + 103% growth → implied gross adds | **Unsourced** |
 | R13 | Pricing tier mix (Core/Peak/Life) & trajectory | Est. 30/50/20 split → blended ~$265 sub-only | High | DCF (ARPU build), revenue bridge | WHOOP pricing page (current), press | Survey data, app store reviews | Tier 2 partial |
 | R14 | Attach rates on premium products (Labs, BP, Healthspan) | Unknown — linchpin for bucket-3 weighting | **Critical for bucket-3** | Comps weighting, DCF, Real Options | Pitchbook, press on Labs uptake | Labs pricing ($199-$599) x estimated adoption | **Unsourced** |
@@ -93,6 +93,51 @@ transactions and remains a non-zero-probability tail scenario.
 - R11 (churn) is the single highest-value Pitchbook scrape target
 - R14 (attach rates) is unsourceable now but determines whether WHOOP deserves bucket-3 weighting — build as sensitivity rather than point estimate
 - R4 (effective ARPU of ~$440) vs. bottom-up subscription math (~$265) creates a ~$175/member gap — decomposed in R19 below
+
+### v2 ARPU Build (replaces single non-sub lump in current model)
+
+| Component | $/member/yr (range) | Confidence | Basis |
+|---|---|---|---|
+| Base subscription (Core ~$239, weighted for monthly payers paying more) | $255-270 | Medium | Pricing page + plan mix estimate |
+| Tier premium (Peak/Life upgrade above Core) | $15-30 | **Low** | Est. 30% on higher tiers, $50-100 premium |
+| Accessories/straps | $20-35 | **Low** | Product catalog, estimated replacement cycle |
+| Advanced Labs (attach rate × avg test price) | $10-30 | **Very low** | 5-10% attach × $200-400 avg |
+| Other (WHOOP Coach included in sub, Unite B2B not per-consumer) | $0-10 | **Very low** | Marginal |
+| **Blended ARPU** | **$300-375** | | Sum of above; bear $300 / base $338 / bull $375 |
+
+**Critical model directive:** ARPU applies to AVERAGE members during the period (~2.25M for 2025), NOT year-end (2.5M). Apply 2.5M × $302 mistake produces a $100M phantom revenue gap. The internal consistency check R3_avg × R4 ≈ R1 must pass.
+
+### v2 Churn Architecture (replaces flat annual rate in current model)
+
+The current implementation uses a single annual churn rate (22 / 17 / 12%) per scenario. This is **structurally wrong** for a hypergrowth subscription business because:
+
+1. New cohorts churn 3-5x faster than year-3+ cohorts (well-established subscription benchmark — Peloton S-1, Strava S-1, Spotify pre-IPO disclosures)
+2. WHOOP's forecast adds ~2M new members in 2026-27, meaning year-1 cohorts dominate the base
+3. Blended annual churn must therefore RISE during hypergrowth and stabilize as the cohort mix matures — flat-annual misses this dynamic entirely
+
+**Required architecture:**
+- Track cohort vintages (year of acquisition) separately
+- Apply tenure-based monthly churn curve:
+
+| Tenure | Monthly Churn (est.) | Cumulative Retention | Rationale |
+|---|---|---|---|
+| Month 1-3 | 4.0-5.0% | 86-88% (3-mo) | New member trial period; highest drop-off |
+| Month 4-12 | 2.0-2.5% | 70-75% (12-mo) | Habit formation; seasonal attrition |
+| Year 2 | 1.5-2.0% | 58-65% (24-mo) | Committed users, data lock-in |
+| Year 3+ | 1.0-1.5% | 50-58% (36-mo) | Power users; very sticky |
+
+- Blended annual churn = endogenous output, not input
+
+**Bear/base/bull anchors:**
+- Bull: WHOOP marketing claim holds (>85% 12-mo retention); Y3+ at 1.0%/mo
+- Base: Sacra envelope (80-85% 12-mo retention); Y3+ at 1.25%/mo
+- Bear: Peloton trajectory overlay (deteriorates from 0.73% → 1.8%/mo over 4 years)
+
+**Note on the "<3% monthly Pro tier" data point:** This is a premium-tier statistic, not blended. Premium tiers always retain better than base. Blended monthly is plausibly 3-4%, not the 1.5% the current bull case implies. Stress-test accordingly.
+
+### v2 Internal Consistency Check (must pass in rebuilt model)
+
+R3_avg × R4 ≈ R1 within ±5%. One of {R1, R3_avg, R4} must be derived, not three independent inputs. The current model has all three as independent and fails this check by ~$100M.
 
 ### R19 Decomposition Candidates
 
