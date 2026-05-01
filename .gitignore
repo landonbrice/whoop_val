@@ -1,4 +1,14 @@
+# OS / editor
 .DS_Store
 ~$*
+
+# R
 .Rhistory
-*.xlsx
+
+# Excel temp files (lock files from open workbooks)
+~$*.xlsx
+
+# Runtime / tool state
+.playwright-mcp/
+__pycache__/
+*.pyc

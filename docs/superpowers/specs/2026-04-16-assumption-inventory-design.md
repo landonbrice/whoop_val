@@ -253,12 +253,12 @@ If the spread between participating and non-participating is <5% of common value
 
 | Comp | Ticker | Role |
 |---|---|---|
-| Peloton | PTON | **Cautionary anchor — distressed end of range (~0.5-1x rev)** |
-| Spotify | SPOT | **Mature subscription — high end of range (~3-4x rev)** |
+| Peloton | PTON | **Cautionary anchor — distressed end of range (~1.2x rev, observed Apr 2026)** |
+| Spotify | SPOT | **Mature subscription — high end of range (~5.1x rev, observed Apr 2026; re-rated from ~3x post-profitability inflection)** |
 | Oura | Private | **Highest-signal comp in universe — closest business model match** |
 | Strava | Private | Reference if data available |
 
-**Bucket 2 treatment: Disaggregated, not averaged.** Report Peloton and Spotify separately. The range (0.8x to 4x) is the insight — where WHOOP falls within it signals market belief about execution quality.
+**Bucket 2 treatment: Disaggregated, not averaged.** Report Peloton and Spotify separately. The range (1.2x to 5.1x, observed Apr 2026) is the insight — where WHOOP falls within it signals market belief about execution quality. **Note:** Spotify's 5.1x exceeds original 3-4x framing; reflects post-profitability re-rating. For benchmarking pre-profit WHOOP, historical unprofitable-era Spotify multiples (2-3x) may be more appropriate.
 
 **Bucket 3 — Health Data / Medical Device**
 
@@ -286,12 +286,12 @@ If the spread between participating and non-participating is <5% of common value
 
 | # | Assumption | Priority | Source | Status |
 |---|---|---|---|---|
-| V6 | Primary: EV/Revenue (NTM) | **Critical** | Public filings, financial data | Needs pull |
+| V6 | Primary: EV/Revenue (NTM) | **Critical** | Public filings, financial data | **Sourced — see research/comp-trading-multiples-summary.md** |
 | V7 | Secondary: EV/ARR | High | Derived from V6 + sub revenue % | Needs calc |
-| V8 | Growth-adjusted: EV/Rev / YoY growth | **Critical — anchors the memo** | Derived | Needs calc |
-| V9 | Rule of 40 score (growth + FCF margin) | High | Public filings | Needs pull |
+| V8 | Growth-adjusted: EV/Rev / YoY growth | **Critical — anchors the memo** | Derived | **Sourced — see trading multiples summary** |
+| V9 | Rule of 40 score (growth + FCF margin) | High | Public filings | **Sourced — all 7 comps** |
 | V10 | Observation date: trailing 30-day average | Medium | — | Design decision |
-| V19 | **Multiple time variance: today, 6mo, 12mo, 3yr** | **High** | Historical pricing data | Needs pull |
+| V19 | **Multiple time variance: today, 6mo, 12mo, 3yr** | **High** | Historical pricing data | **Sourced — research/comp-historical-multiples-v19.md. Key finding: Dexcom compressed 60% (13.8x→5.0x) over 3yr; 2023 multiples support $10.1B, current multiples support ~$4.5B** |
 
 **V19 implementation:** For Garmin, Peloton, and Dexcom, pull EV/Revenue at four time points. Report the range. If Q1 2026 was a local peak in health-tech multiples, the Series G looks rich vs. through-cycle. Half a page of analysis that adds real defensive rigor.
 
@@ -307,12 +307,14 @@ If the spread between participating and non-participating is <5% of common value
 
 **The bucket weights are not free parameters. They are the thesis.** Each scheme makes a claim about what WHOOP is:
 
-| Scenario | B1 (Hardware) | B2 (Subscription) | B3 (Health Data) | Thesis Implied | Approx. Blended Multiple |
-|---|---|---|---|---|---|
-| Bear | 40% | 40% | 20% | WHOOP is Peloton with better branding | 2-4x revenue |
-| Base | 20% | 40% | 40% | Subscription business with healthcare optionality | 4-7x revenue |
-| Bull | 10% | 30% | 60% | Health data platform that happens to use a wearable | 6-9x revenue |
-| Series G implied | ~5% | ~25% | ~70% | Market prices WHOOP as a health-data company | ~9x revenue |
+| Scenario | B1 (Hardware) | B2 (Subscription) | B3 (Health Data) | Thesis Implied | Blended Multiple (observed Apr 2026) | Blended Multiple (pre-research est.) |
+|---|---|---|---|---|---|---|
+| Bear | 40% | 40% | 20% | WHOOP is Peloton with better branding | **~4.6x revenue → $5.1B** | 2-4x revenue |
+| Base | 20% | 40% | 40% | Subscription business with healthcare optionality | **~5.1x revenue → $5.6B** | 4-7x revenue |
+| Bull | 10% | 30% | 60% | Health data platform that happens to use a wearable | **~5.4x revenue → $5.9B** | 6-9x revenue |
+| Series G implied | ~5% | ~25% | ~70% | Market prices WHOOP as a health-data company | **~5.4x static; ~9.2x with growth premium** | ~9x revenue |
+
+**Session 2 recalibration (April 16, 2026):** Observed multiples — B1: 6.7x (Garmin), B2: 1.2-5.1x (Peloton-Spotify), B3: 5.0-6.4x (median 5.8x). No static bucket weighting reaches $10.1B. The Series G mark requires a ~1.7x growth premium (WHOOP 103% growth vs. comps 10-26%) plus real-option value. Full analysis in `research/comp-trading-multiples-summary.md`.
 
 ### Dual Back-Solve (Key Analytical Move)
 
@@ -368,10 +370,10 @@ Oura deserves disproportionate research time. It's the only near-identical busin
 
 | # | Assumption | Treatment | Estimate | Source | Status |
 |---|---|---|---|---|---|
-| D1 | Risk-free rate | **Point estimate** | ~4.3% (10yr UST) | FRED / Treasury.gov | Needs pull |
-| D2 | Equity risk premium | **Point estimate** | ~5.7% | Damodaran implied ERP (April 2026) | Needs pull |
-| D3 | Beta | **Sensitivity axis** (0.9, 1.1, 1.3, 1.5) | Comp-derived, varies with bucket weighting | Unlevered beta from comp set, re-levered | Comp-derived |
-| D4 | Size premium | **Point estimate** | ~0.75% | Kroll / Duff & Phelps (7th-8th decile) | Tier 2 |
+| D1 | Risk-free rate | **Point estimate** | **4.30%** (10yr UST, Apr 14 2026) | Fed H.15 | **Sourced — Tier 1** |
+| D2 | Equity risk premium | **Point estimate** | **4.23-4.50%** (Damodaran 4.23%; Kroll 5.0%; base case 4.5%) | Damodaran Jan 2026 + Kroll | **Sourced — Tier 1. NOTE: materially below prior 5.7% estimate** |
+| D3 | Beta | **Sensitivity axis** (0.9, 1.0, 1.1, 1.3) | Damodaran sector betas: Healthcare Products 0.83, Healthcare IT 0.99, Electronics 0.83, Entertainment 0.74, Recreation 0.70. Blended WHOOP beta ~0.81-0.85 across scenarios — **beta is NOT the swing factor** | Damodaran Jan 2026 + comp-derived | **Sourced — Tier 1** |
+| D4 | Size premium | **Point estimate** | **~0.81%** (CRSP Decile 3 at $10B). Private co. premium adds 1.0-2.5% | Kroll/Duff & Phelps (Decile 3: $7.3-13.5B) | **Sourced — Tier 2 (Kroll detail paywalled)** |
 | D5 | Company-specific risk premium | **Sensitivity axis** (1%, 2%, 3%) | Pre-IPO execution risk, private company | Academic literature + judgment | Tier 3 |
 | D6 | Cost of debt | N/A | Irrelevant — minimal/no debt | — | N/A |
 | D7 | Capital structure weights | Point estimate | ~100% equity | Derived from S10 | Tier 2 |
@@ -379,16 +381,18 @@ Oura deserves disproportionate research time. It's the only near-identical busin
 
 **The beta problem:** WHOOP has no trading history. Comp-derived unlevered beta (weighted by bucket weights from V11) is the point estimate. This makes WACC itself a function of the thesis — intellectually honest but circular. The 4x3 grid (beta x CSRP) isolates where uncertainty actually lives rather than bracketing the entire WACC.
 
-**Rough component estimates:**
+**Component estimates (updated April 16, 2026 with sourced data):**
 
-| Component | Estimate |
-|---|---|
-| Risk-free rate | ~4.3% |
-| ERP | ~5.7% |
-| Unlevered comp beta | ~1.0-1.3 (Garmin ~0.9, Peloton ~1.8, Dexcom ~1.1) |
-| Size premium | ~0.75% |
-| CSRP | 1-3% |
-| **Implied cost of equity** | **~11-15%** |
+| Component | Pre-Research Est. | Sourced Value | Source |
+|---|---|---|---|
+| Risk-free rate | ~4.3% | **4.30%** | Fed H.15, Apr 14 2026 |
+| ERP | ~5.7% | **4.23-4.50%** | Damodaran Jan 2026 (4.23%); Kroll (5.0%) |
+| Unlevered comp beta | ~1.0-1.3 | **~0.81-0.85** (bucket-weighted) | Damodaran sector betas; individual comp betas |
+| Size premium | ~0.75% | **~0.81%** | Kroll CRSP Decile 3 |
+| CSRP (private co.) | 1-3% | **1.0-2.5%** | Kroll private company premium |
+| **Implied cost of equity** | **~11-15%** | **~9.5-12.0%** (base ~10.0-10.5%) | Derived |
+
+**Key finding:** WACC compressed ~200bps from prior estimate, driven by (a) ERP drop from 5.7% to 4.2-4.5% and (b) comp-derived beta landing at 0.81-0.85 rather than 1.0-1.3. Lower WACC mechanically increases DCF value by ~15-25% — partially offsetting the Bucket 3 multiple compression. Beta is NOT the swing factor across scenarios; the private company premium (CSRP) is.
 
 ### Part B: Terminal Value
 
