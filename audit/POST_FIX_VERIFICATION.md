@@ -110,3 +110,46 @@ Per user's batch decisions (2026-05-10):
 - **Cap Table waterfall:** Skipping. Will strip preferred-economics from the deck (slide 11's $0.6B ratchet + $0.4B participation — fabricated, no source in CLAUDE.md research).
 - **TV exit-mult vs Gordon divergence:** Accept and document (now WARN at 25.79%, was FAIL at 33.65%).
 
+# WHOOP Model — Phase 3b Addendum: WACC reverted to bottoms-up
+
+**Date:** 2026-05-10 (later same session)
+**Decision:** User chose to use the comp-derived bottoms-up WACC (11.59% Base) as the model's live WACC, not Damodaran top-down (10.85% Base). Editorial call — bottoms-up is the more conservative anchor and uses our own per-comp regression work.
+
+## Headlines under bottoms-up WACC
+
+| Output | Pre-WACC-fix (orig) | Phase 3a (Damodaran 10.85%) | Phase 3b (bottoms-up 11.59%) — CURRENT |
+|---|---:|---:|---:|
+| Bear DCF Equity | $2.50B | $2.55B | **$2.50B** |
+| Base DCF Equity | $7.34B | $7.83B | **$7.32B** |
+| Bull DCF Equity | $19.88B | $28.43B | **$24.66B** |
+| Scenario-Wtd Neutral 20/50/30 | $10.13B | $12.95B | **$11.56B** |
+| Scenario-Wtd Pessimistic | $7.53B | $9.07B | **$8.23B** |
+| Scenario-Wtd Optimistic | $11.63B | $15.28B | **$13.53B** |
+| Input-level Neutral | $8.09B | $8.80B | **$8.19B** |
+| Jensen's gap (Neutral) | $2.04B | $4.15B | **$3.37B** |
+| FF Weighted Avg | $7.11B | $9.34B | **$8.78B** |
+| Premium (intrinsic alone) | +0.3% | +28.2% | **+14.4%** |
+| Premium (FF weighted) | -29.6% | -7.6% | **-13.1%** |
+| WACC Base | 11.59% | 10.85% | **11.59%** |
+
+## Cell changes from Phase 3a → 3b
+
+- **`DCF!D12:K12`** repointed from `=Assumptions!$F$73` (Damodaran) back to `=Assumptions!$F$74` (bottoms-up).
+- **`DCF!B60:F63`** snapshot block refreshed via toggle through 4 scenarios + capture of live recompute via `formulas` library.
+- **`Assumptions!B3`** restored to "Base" (canonical default).
+
+The Bull MG fix (off-by-one Bull arms at F172/F173/F174 referencing E173/E174/#REF! instead of E172/E173/E174) is RETAINED from Phase 3a — that fix is mechanical, not subjective, and the user has not reversed it.
+
+## Thesis under bottoms-up
+
+Series G $10.10B is **modestly under-priced at +14.4%** under Neutral conviction (down from +28.2% with Damodaran WACC). The "Series G mildly under-priced" thesis remains; the magnitude is now more conservative and Q&A-defendable. FF weighted average is below Series G by 13.1%, which the deck reframes as the structural mispricing of platform-positioned companies under comp-based methodology.
+
+## Deck status
+
+`Whoop Valuation Master.audited.fast.pptx` rebuilt with 15 slides (was 13):
+- Added Slide 5 — DCF Mechanics Build (year-by-year P&L + PV table + EV→Equity bridge)
+- Added Slide 6 — WACC Mechanics (per-comp regressed betas, bucket medians, blended β, CAPM build, Damodaran cross-check banner)
+- All other slides have headline numbers re-anchored to bottoms-up via JSON-driven build_deck.py
+
+5 visuals regenerated for new numbers: football_field.png, scenario_dispersion.png, jensens_gap.png (tornado.png and funding_timeline.png unchanged).
+

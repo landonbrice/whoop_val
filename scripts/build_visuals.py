@@ -69,7 +69,7 @@ def football_field():
         ("Implied IPO Trading Range",       11.5, 12.63, 14.5, 0.15, NAVY),
         ("Last-Round Implied (Series G)",   10.10, 10.10, 10.10, 0.10, "#000000"),
         ("Public Comps (3-bucket)",          1.20,  3.62,  7.55, 0.35, ORANGE),
-        ("Scenario-Wtd DCF (Intrinsic)",     9.07, 12.95, 15.28, 0.40, GREEN),
+        ("Scenario-Wtd DCF (Intrinsic)",     8.23, 11.56, 13.53, 0.40, GREEN),
     ]
     n = len(methods)
     y_positions = list(range(n))
@@ -99,8 +99,8 @@ def football_field():
             fontsize=10.5, fontweight="bold", va="bottom")
 
     # Football-field weighted average dashed line
-    ax.axvline(9.34, color=ORANGE, linestyle=":", linewidth=2.2, alpha=0.95)
-    ax.text(9.34, -0.85, "FF Weighted Avg $9.34B  ", color=ORANGE,
+    ax.axvline(8.78, color=ORANGE, linestyle=":", linewidth=2.2, alpha=0.95)
+    ax.text(8.78, -0.85, "FF Weighted Avg $8.78B  ", color=ORANGE,
             fontsize=10.5, fontweight="bold", ha="right", va="center")
 
     ax.set_yticks(y_positions)
@@ -113,8 +113,8 @@ def football_field():
                  fontsize=15, fontweight="bold", color=DARK, loc="left", pad=14)
 
     # Side annotation
-    txt = ("Intrinsic alone $12.95B  →  +28.2% vs Series G\n"
-           "FF weighted avg $9.34B  →  −7.6% vs Series G")
+    txt = ("Intrinsic alone $11.56B  →  +14.4% vs Series G\n"
+           "FF weighted avg $8.78B  →  −13.1% vs Series G")
     ax.text(0.99, 0.02, txt, transform=ax.transAxes,
             ha="right", va="bottom", fontsize=10.5, color=DARK,
             bbox=dict(facecolor="#FFF7F0", edgecolor=ORANGE,
@@ -135,11 +135,11 @@ def scenario_dispersion():
     fig, ax = plt.subplots(figsize=(13, 7.2))
 
     scenarios = [
-        ("Bear\n‘Consumer Wearable\nPlateau’",          2.55,  BEAR),
-        ("Base\n‘Durable Consumer\nSubscription’",      7.83,  BASE),
-        ("Bull\n‘Healthcare Reimb.\n+ Platform Success’", 28.43, BULL),
+        ("Bear\n‘Consumer Wearable\nPlateau’",          2.50,  BEAR),
+        ("Base\n‘Durable Consumer\nSubscription’",      7.32,  BASE),
+        ("Bull\n‘Healthcare Reimb.\n+ Platform Success’", 24.66, BULL),
     ]
-    weighted = ("Scenario-Weighted\nNeutral 20/50/30", 12.95, ORANGE)
+    weighted = ("Scenario-Weighted\nNeutral 20/50/30", 11.56, ORANGE)
 
     labels  = [s[0] for s in scenarios] + [weighted[0]]
     values  = [s[1] for s in scenarios] + [weighted[1]]
@@ -177,8 +177,8 @@ def scenario_dispersion():
     ax.set_axisbelow(True)
 
     # Range box
-    rng_text = ("Range:  $2.55B → $28.43B  ·  11.1× spread\n"
-                "Weighted (Neutral 20/50/30):  $12.95B")
+    rng_text = ("Range:  $2.50B → $24.66B  ·  9.9× spread\n"
+                "Weighted (Neutral 20/50/30):  $11.56B")
     ax.text(0.01, 0.97, rng_text, transform=ax.transAxes,
             ha="left", va="top", fontsize=10.5, color=DARK,
             bbox=dict(facecolor="#F5F5F5", edgecolor=GRAY_FT,
@@ -203,24 +203,24 @@ def jensens_gap():
     x = np.linspace(0, 1, 200)
 
     # Linear "input-level" line: combines inputs first, then runs single DCF
-    # We anchor the line at the input-level number $8.80B at the neutral mix
-    # and let the slope walk between Bear $2.55B and Bull $28.43B endpoints.
-    bear, base, bull = 2.55, 7.83, 28.43
+    # We anchor the line at the input-level number $8.19B at the neutral mix
+    # and let the slope walk between Bear $2.50B and Bull $24.66B endpoints.
+    bear, base, bull = 2.50, 7.32, 24.66
     # Linear interpolation from bear at x=0 to bull at x=1
     linear = bear + (bull - bear) * x
     # Scenario-level (convex) curve: weighted average of three independent DCFs
     # with weights varying as we tilt the mix. For neutral mix (x=0.4 by
     # construction so that bear weight = (1-x)*0.5, bull weight = x*0.75 etc.),
-    # we land on $12.95B.
+    # we land on $11.56B.
     # Define a parametric convex blend that interpolates the scenario points.
     # Use a quadratic that hits the three observed scenario-weight outcomes:
-    # Pessimistic 35/50/15 -> $9.07B at x≈0.20
-    # Neutral     20/50/30 -> $12.95B at x≈0.40
-    # Optimistic  15/45/40 -> $15.28B at x≈0.50
+    # Pessimistic 35/50/15 -> $8.23B at x≈0.20
+    # Neutral     20/50/30 -> $11.56B at x≈0.40
+    # Optimistic  15/45/40 -> $13.53B at x≈0.50
     # Fit a quadratic through these three (plus anchored to bear at x=0 and
     # bull at x=1 for visual completeness).
     xs = np.array([0.0, 0.20, 0.40, 0.50, 1.0])
-    ys = np.array([bear, 9.07, 12.95, 15.28, bull])
+    ys = np.array([bear, 8.23, 11.56, 13.53, bull])
     coeffs = np.polyfit(xs, ys, 4)
     convex = np.polyval(coeffs, x)
 
@@ -236,20 +236,20 @@ def jensens_gap():
 
     # Anchor markers at the Neutral mix
     nx = 0.40
-    ax.scatter([nx], [8.80], color=GRAY_BD, s=80, zorder=5)
-    ax.scatter([nx], [12.95], color=ORANGE, s=100, zorder=5,
+    ax.scatter([nx], [8.19], color=GRAY_BD, s=80, zorder=5)
+    ax.scatter([nx], [11.56], color=ORANGE, s=100, zorder=5,
                edgecolor="white", linewidth=1.5)
-    ax.annotate("Input-level\n$8.80B",
-                xy=(nx, 8.80), xytext=(nx - 0.20, 5.3),
+    ax.annotate("Input-level\n$8.19B",
+                xy=(nx, 8.19), xytext=(nx - 0.20, 5.3),
                 fontsize=10.5, color=GRAY_BD, fontweight="bold",
                 arrowprops=dict(arrowstyle="->", color=GRAY_BD, lw=1.0))
-    ax.annotate("Scenario-level\n$12.95B",
-                xy=(nx, 12.95), xytext=(nx + 0.04, 17.5),
+    ax.annotate("Scenario-level\n$11.56B",
+                xy=(nx, 11.56), xytext=(nx + 0.04, 17.5),
                 fontsize=10.5, color=ORANGE, fontweight="bold",
                 arrowprops=dict(arrowstyle="->", color=ORANGE, lw=1.0))
 
     # Jensen Gap callout
-    ax.text(nx, 10.85, "Jensen Gap\n$4.15B",
+    ax.text(nx, 10.85, "Jensen Gap\n$3.37B",
             ha="center", va="center", fontsize=11.5,
             color=ORANGE, fontweight="bold",
             bbox=dict(facecolor="white", edgecolor=ORANGE,
@@ -287,9 +287,9 @@ def jensens_gap():
 # ---------------------------------------------------------------------------
 def tornado():
     fig, ax = plt.subplots(figsize=(13, 7.2))
-    center = 12.95
+    center = 11.56
 
-    # Driver, bear-side delta, bull-side delta (in $B from the Neutral $12.95B)
+    # Driver, bear-side delta, bull-side delta (in $B from the Neutral $11.56B)
     drivers = [
         ("2033 ending members (10.9M ⇄ 18.1M)",            -4.10, +4.20),
         ("Terminal exit multiple (2.5x ⇄ 4.5x)",           -2.40, +2.60),
