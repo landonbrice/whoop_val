@@ -165,10 +165,10 @@ def football_field():
     cmp_hi = ff.get("row_10", {}).get("high", 7.55)
 
     methods = [
-        ("Implied IPO Trading Range",       ipo_lo, ipo_b, ipo_hi, 0.15, NAVY),
-        ("Last-Round Implied (Series G)",   10.10, 10.10, 10.10,   0.10, "#000000"),
-        ("Public Comps (3-bucket)",          cmp_lo, cmp_b, cmp_hi, 0.35, ORANGE),
-        ("Scenario-Wtd DCF (Intrinsic)",     sw_lo, sw_b, sw_hi,    0.40, GREEN),
+        ("Implied IPO Trading Range  ·  w=15%",     ipo_lo, ipo_b, ipo_hi, 0.15, NAVY),
+        ("Last-Round Implied (Series G)  ·  w=10%", 10.10, 10.10, 10.10,   0.10, "#000000"),
+        ("Public Comps (3-bucket)  ·  w=35%",        cmp_lo, cmp_b, cmp_hi, 0.35, ORANGE),
+        ("Scenario-Wtd DCF (Intrinsic)  ·  w=40%",   sw_lo, sw_b, sw_hi,    0.40, GREEN),
     ]
     n = len(methods)
     for i, (label, lo, base, hi, w, col) in enumerate(methods):
@@ -176,30 +176,32 @@ def football_field():
                 color=col, alpha=0.25, edgecolor=col, linewidth=1)
         ax.barh(i, 0.25, left=base - 0.125, height=0.55,
                 color=col, edgecolor="white", linewidth=1)
-        ax.text(lo - 0.3, i, f"${lo:.2f}B", va="center", ha="right",
+        ax.text(lo - 0.25, i, f"${lo:.2f}B", va="center", ha="right",
                 fontsize=9.5, color=GRAY_BD)
-        ax.text(hi + 0.3, i, f"${hi:.2f}B", va="center", ha="left",
+        ax.text(hi + 0.25, i, f"${hi:.2f}B", va="center", ha="left",
                 fontsize=9.5, color=GRAY_BD)
         ax.text(base, i + 0.34, f"Base ${base:.2f}B", ha="center",
                 fontsize=10, color=col, fontweight="bold")
-        ax.text(-3.2, i, f"w={int(w*100)}%", va="center", ha="left",
-                fontsize=10, color=GRAY_FT, family="monospace")
 
-    # Series G ref
+    # Series G ref — label below x-axis, upper line
     ax.axvline(10.10, color=DARK, linestyle="--", linewidth=1.6, alpha=0.85)
-    ax.text(10.10, n - 0.35, "  Series G $10.10B", color=DARK,
-            fontsize=10.5, fontweight="bold", va="bottom")
+    ax.text(10.10, -0.45, "Series G $10.10B", color=DARK,
+            fontsize=10.5, fontweight="bold", va="center", ha="center",
+            bbox=dict(facecolor="white", edgecolor=DARK,
+                      boxstyle="round,pad=0.22", linewidth=1))
 
-    # FF weighted average line
+    # FF weighted average line — label below Series G label
     ff_wavg = float(M.get("ff_d18", 9.09))
     ax.axvline(ff_wavg, color=ORANGE, linestyle=":", linewidth=2.2, alpha=0.95)
-    ax.text(ff_wavg, -0.85, f"FF Weighted Avg ${ff_wavg:.2f}B  ", color=ORANGE,
-            fontsize=10.5, fontweight="bold", ha="right", va="center")
+    ax.text(ff_wavg, -0.92, f"FF Wtd Avg ${ff_wavg:.2f}B", color=ORANGE,
+            fontsize=10.5, fontweight="bold", ha="center", va="center",
+            bbox=dict(facecolor="white", edgecolor=ORANGE,
+                      boxstyle="round,pad=0.22", linewidth=1))
 
     ax.set_yticks(range(n))
-    ax.set_yticklabels([m[0] for m in methods], fontsize=11.5, color=DARK)
-    ax.set_xlim(-4.5, 22.0)
-    ax.set_ylim(-1.4, n - 0.2)
+    ax.set_yticklabels([m[0] for m in methods], fontsize=11.0, color=DARK)
+    ax.set_xlim(-1.0, 21.5)
+    ax.set_ylim(-1.1, n - 0.2)
     ax.xaxis.set_major_formatter(FuncFormatter(lambda x, p: f"${int(x)}B" if x >= 0 else ""))
     ax.set_xlabel("Enterprise Value ($B)", fontsize=11, color=GRAY_BD)
     ax.set_title("Football Field — Triangulation across four methods",
@@ -209,8 +211,8 @@ def football_field():
     prem_ff  = (ff_wavg * 1000 / 10100) - 1
     txt = (f"Intrinsic alone ${sw_b:.2f}B  →  {prem_int*100:+.1f}% vs Series G\n"
            f"FF weighted avg ${ff_wavg:.2f}B  →  {prem_ff*100:+.1f}% vs Series G")
-    ax.text(0.99, 0.02, txt, transform=ax.transAxes,
-            ha="right", va="bottom", fontsize=10.5, color=DARK,
+    ax.text(0.99, 0.97, txt, transform=ax.transAxes,
+            ha="right", va="top", fontsize=10.5, color=DARK,
             bbox=dict(facecolor="#FFF7F0", edgecolor=ORANGE,
                       boxstyle="round,pad=0.6", linewidth=1.2))
     ax.grid(axis="x", color=GRAY_LT, linewidth=0.6, alpha=0.7)
