@@ -543,7 +543,7 @@ def assumption_inventory():
 def sensitivity_heatmap():
     fig = plt.figure(figsize=(20, 9.0))
     gs = fig.add_gridspec(3, 3, height_ratios=[1, 1, 1],
-                          width_ratios=[1.4, 0.05, 1.0], hspace=0.55, wspace=0.05)
+                          width_ratios=[1.5, 0.03, 1.0], hspace=0.65, wspace=0.30)
 
     # ----- LEFT: Grid 6 — P_Bear × P_Bull heatmap (spans all 3 rows) -----
     axH = fig.add_subplot(gs[:, 0])
@@ -587,8 +587,9 @@ def sensitivity_heatmap():
     except (ValueError, IndexError):
         pass
 
-    # Colorbar
-    cbar = fig.colorbar(im, ax=axH, fraction=0.04, pad=0.02)
+    # Colorbar — dedicated axis in gridspec column 1
+    cax = fig.add_subplot(gs[:, 1])
+    cbar = fig.colorbar(im, cax=cax)
     cbar.set_label("Equity ($B)", fontsize=10.5, color=DARK)
     cbar.ax.tick_params(labelsize=9)
 
@@ -600,20 +601,24 @@ def sensitivity_heatmap():
         # Use the "EV Coupled" column when present, else EV constant
         members  = [r["members_2033"] for r in g7]
         ev_vals  = [(r.get("ev_coupled") or r.get("ev_const") or 0) / 1000 for r in g7]
-        labels   = [(r.get("lens") or "")[:32] for r in g7]
+        def _clean(s):
+            s = (s or "").split(" — ")[-1]
+            if s.startswith("Lens "): s = s[5:]
+            return s[:18]
+        labels   = [_clean(r.get("lens")) for r in g7]
         axA.barh(range(len(members)), ev_vals, color=ORANGE, alpha=0.85,
                  edgecolor="white", height=0.7)
         axA.set_yticks(range(len(members)))
-        axA.set_yticklabels(labels, fontsize=8.5)
+        axA.set_yticklabels(labels, fontsize=9)
         axA.invert_yaxis()
         for i, (m, e) in enumerate(zip(members, ev_vals)):
-            axA.text(e + 0.15, i, f"{m:.1f}M → ${e:.1f}B",
+            axA.text(e + 0.12, i, f"{m:.1f}M  ${e:.1f}B",
                      va="center", fontsize=8.5, color=GRAY_BD)
         axA.set_xlabel("DCF Equity ($B)", fontsize=10, color=GRAY_BD)
         axA.set_title("Members lens — 2033 endpoint sensitivity (most material driver)",
                       fontsize=10.5, fontweight="bold", color=DARK, loc="left", pad=8)
         axA.axvline(M["base_equity"]/1000, color=NAVY, linestyle="--", linewidth=1.2)
-        axA.set_xlim(0, max(ev_vals) * 1.30)
+        axA.set_xlim(0, max(ev_vals) * 1.42)
         axA.grid(axis="x", color=GRAY_LT, linewidth=0.5, alpha=0.7)
         axA.set_axisbelow(True)
 
