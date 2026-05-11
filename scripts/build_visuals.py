@@ -116,13 +116,13 @@ def funding_timeline():
         ax.text(i, -1.3, lbl, ha="center", va="top", fontsize=10.5, color=DARK, fontweight="bold")
         ax.text(i, -2.0, dt, ha="center", va="top", fontsize=9, color=GRAY_FT, family="monospace")
         txt = f"${v:.1f}B" if v >= 1 else f"${v*1000:.0f}M"
-        ax.text(i, v + 0.55, txt, ha="center", fontsize=11, color=col, fontweight="bold")
-    ax.annotate("", xy=(6, 9.4), xytext=(5, 4.0),
+        ax.text(i, v * 1.45, txt, ha="center", fontsize=11, color=col, fontweight="bold")
+    ax.annotate("", xy=(5.88, 8.6), xytext=(2.6, 5.0),
                 arrowprops=dict(arrowstyle="->", color=ORANGE, lw=1.6,
-                                connectionstyle="arc3,rad=-0.18"))
-    ax.text(5.5, 6.2, "+2.8× step-up\n5.5× revenue growth\nmultiple compressed\n18× → 9×",
-            ha="center", fontsize=9.5, color=ORANGE, fontweight="bold",
-            bbox=dict(facecolor="#FFF7F0", edgecolor=ORANGE, boxstyle="round,pad=0.4", linewidth=1))
+                                connectionstyle="arc3,rad=0.0"))
+    ax.text(1.4, 5.0, "+2.8× step-up  ·  5.5× revenue growth\nmultiple compressed 18× → 9×",
+            ha="center", va="center", fontsize=9.5, color=ORANGE, fontweight="bold",
+            bbox=dict(facecolor="#FFF7F0", edgecolor=ORANGE, boxstyle="round,pad=0.35", linewidth=1))
     ax.set_yscale("symlog", linthresh=0.05)
     ax.set_ylim(-2.5, 18)
     ax.set_xlim(-0.5, len(rounds) - 0.5)
@@ -165,10 +165,10 @@ def football_field():
     cmp_hi = ff.get("row_10", {}).get("high", 7.55)
 
     methods = [
-        ("Implied IPO Trading Range",       ipo_lo, ipo_b, ipo_hi, 0.15, NAVY),
-        ("Last-Round Implied (Series G)",   10.10, 10.10, 10.10,   0.10, "#000000"),
-        ("Public Comps (3-bucket)",          cmp_lo, cmp_b, cmp_hi, 0.35, ORANGE),
-        ("Scenario-Wtd DCF (Intrinsic)",     sw_lo, sw_b, sw_hi,    0.40, GREEN),
+        ("Implied IPO Trading Range  ·  w=15%",     ipo_lo, ipo_b, ipo_hi, 0.15, NAVY),
+        ("Last-Round Implied (Series G)  ·  w=10%", 10.10, 10.10, 10.10,   0.10, "#000000"),
+        ("Public Comps (3-bucket)  ·  w=35%",        cmp_lo, cmp_b, cmp_hi, 0.35, ORANGE),
+        ("Scenario-Wtd DCF (Intrinsic)  ·  w=40%",   sw_lo, sw_b, sw_hi,    0.40, GREEN),
     ]
     n = len(methods)
     for i, (label, lo, base, hi, w, col) in enumerate(methods):
@@ -176,30 +176,32 @@ def football_field():
                 color=col, alpha=0.25, edgecolor=col, linewidth=1)
         ax.barh(i, 0.25, left=base - 0.125, height=0.55,
                 color=col, edgecolor="white", linewidth=1)
-        ax.text(lo - 0.3, i, f"${lo:.2f}B", va="center", ha="right",
+        ax.text(lo - 0.25, i, f"${lo:.2f}B", va="center", ha="right",
                 fontsize=9.5, color=GRAY_BD)
-        ax.text(hi + 0.3, i, f"${hi:.2f}B", va="center", ha="left",
+        ax.text(hi + 0.25, i, f"${hi:.2f}B", va="center", ha="left",
                 fontsize=9.5, color=GRAY_BD)
         ax.text(base, i + 0.34, f"Base ${base:.2f}B", ha="center",
                 fontsize=10, color=col, fontweight="bold")
-        ax.text(-3.2, i, f"w={int(w*100)}%", va="center", ha="left",
-                fontsize=10, color=GRAY_FT, family="monospace")
 
-    # Series G ref
+    # Series G ref — label below x-axis, upper line
     ax.axvline(10.10, color=DARK, linestyle="--", linewidth=1.6, alpha=0.85)
-    ax.text(10.10, n - 0.35, "  Series G $10.10B", color=DARK,
-            fontsize=10.5, fontweight="bold", va="bottom")
+    ax.text(10.10, -0.45, "Series G $10.10B", color=DARK,
+            fontsize=10.5, fontweight="bold", va="center", ha="center",
+            bbox=dict(facecolor="white", edgecolor=DARK,
+                      boxstyle="round,pad=0.22", linewidth=1))
 
-    # FF weighted average line
+    # FF weighted average line — label below Series G label
     ff_wavg = float(M.get("ff_d18", 9.09))
     ax.axvline(ff_wavg, color=ORANGE, linestyle=":", linewidth=2.2, alpha=0.95)
-    ax.text(ff_wavg, -0.85, f"FF Weighted Avg ${ff_wavg:.2f}B  ", color=ORANGE,
-            fontsize=10.5, fontweight="bold", ha="right", va="center")
+    ax.text(ff_wavg, -0.92, f"FF Wtd Avg ${ff_wavg:.2f}B", color=ORANGE,
+            fontsize=10.5, fontweight="bold", ha="center", va="center",
+            bbox=dict(facecolor="white", edgecolor=ORANGE,
+                      boxstyle="round,pad=0.22", linewidth=1))
 
     ax.set_yticks(range(n))
-    ax.set_yticklabels([m[0] for m in methods], fontsize=11.5, color=DARK)
-    ax.set_xlim(-4.5, 22.0)
-    ax.set_ylim(-1.4, n - 0.2)
+    ax.set_yticklabels([m[0] for m in methods], fontsize=11.0, color=DARK)
+    ax.set_xlim(-1.0, 21.5)
+    ax.set_ylim(-1.1, n - 0.2)
     ax.xaxis.set_major_formatter(FuncFormatter(lambda x, p: f"${int(x)}B" if x >= 0 else ""))
     ax.set_xlabel("Enterprise Value ($B)", fontsize=11, color=GRAY_BD)
     ax.set_title("Football Field — Triangulation across four methods",
@@ -209,8 +211,8 @@ def football_field():
     prem_ff  = (ff_wavg * 1000 / 10100) - 1
     txt = (f"Intrinsic alone ${sw_b:.2f}B  →  {prem_int*100:+.1f}% vs Series G\n"
            f"FF weighted avg ${ff_wavg:.2f}B  →  {prem_ff*100:+.1f}% vs Series G")
-    ax.text(0.99, 0.02, txt, transform=ax.transAxes,
-            ha="right", va="bottom", fontsize=10.5, color=DARK,
+    ax.text(0.99, 0.97, txt, transform=ax.transAxes,
+            ha="right", va="top", fontsize=10.5, color=DARK,
             bbox=dict(facecolor="#FFF7F0", edgecolor=ORANGE,
                       boxstyle="round,pad=0.6", linewidth=1.2))
     ax.grid(axis="x", color=GRAY_LT, linewidth=0.6, alpha=0.7)
@@ -400,23 +402,29 @@ def tornado():
     ax.barh(y, bull_deltas, left=center, color=BULL, alpha=0.85,
             edgecolor="white", height=0.6, label="Bull input")
     for i, (lo, hi) in enumerate(zip(bear_deltas, bull_deltas)):
-        ax.text(center + lo - 0.15, i, f"${center+lo:.1f}B", ha="right",
+        ax.text(center + lo - 0.2, i, f"${center+lo:.1f}B", ha="right",
                 va="center", fontsize=9.5, color=GRAY_BD)
-        ax.text(center + hi + 0.15, i, f"${center+hi:.1f}B", ha="left",
+        ax.text(center + hi + 0.2, i, f"${center+hi:.1f}B", ha="left",
                 va="center", fontsize=9.5, color=GRAY_BD)
     ax.axvline(center, color=DARK, linewidth=1.8)
-    ax.text(center, n - 0.4, f"  Neutral ${center:.2f}B",
-            ha="left", fontsize=10.5, color=DARK, fontweight="bold")
     ax.axvline(10.10, color=SERIESG, linestyle="--", linewidth=1.4)
-    ax.text(10.10, -0.7, " Series G $10.10B", color=SERIESG,
-            ha="left", fontsize=10, fontweight="bold")
     ax.set_yticks(y)
     ax.set_yticklabels(labels, fontsize=11)
     ax.invert_yaxis()
     ax.set_xlim(7.0, 18.5)
+    ax.set_ylim(n + 0.2, -0.5)
     ax.set_xlabel("DCF Equity Value ($B)", fontsize=11.5, color=DARK)
     ax.set_title("Tornado — Members dominates by ~3× the next driver",
                  fontsize=14, fontweight="bold", color=DARK, loc="left", pad=14)
+    # Anchor labels below the bars: Series G left of its line, Neutral right of its line
+    ax.text(10.10 - 0.1, n - 0.1, "Series G $10.10B", color=SERIESG,
+            ha="right", va="center", fontsize=10, fontweight="bold",
+            bbox=dict(facecolor="white", edgecolor=SERIESG,
+                      boxstyle="round,pad=0.22", linewidth=1))
+    ax.text(center + 0.1, n - 0.1, f"Neutral ${center:.2f}B",
+            ha="left", va="center", fontsize=10.5, color=DARK, fontweight="bold",
+            bbox=dict(facecolor="white", edgecolor=DARK,
+                      boxstyle="round,pad=0.22", linewidth=1))
     ax.legend(loc="lower right", frameon=True, fontsize=10)
     ax.grid(axis="x", color=GRAY_LT, linewidth=0.6, alpha=0.7)
     ax.set_axisbelow(True)
@@ -543,7 +551,7 @@ def assumption_inventory():
 def sensitivity_heatmap():
     fig = plt.figure(figsize=(20, 9.0))
     gs = fig.add_gridspec(3, 3, height_ratios=[1, 1, 1],
-                          width_ratios=[1.4, 0.05, 1.0], hspace=0.55, wspace=0.05)
+                          width_ratios=[1.5, 0.03, 1.0], hspace=0.65, wspace=0.30)
 
     # ----- LEFT: Grid 6 — P_Bear × P_Bull heatmap (spans all 3 rows) -----
     axH = fig.add_subplot(gs[:, 0])
@@ -587,8 +595,9 @@ def sensitivity_heatmap():
     except (ValueError, IndexError):
         pass
 
-    # Colorbar
-    cbar = fig.colorbar(im, ax=axH, fraction=0.04, pad=0.02)
+    # Colorbar — dedicated axis in gridspec column 1
+    cax = fig.add_subplot(gs[:, 1])
+    cbar = fig.colorbar(im, cax=cax)
     cbar.set_label("Equity ($B)", fontsize=10.5, color=DARK)
     cbar.ax.tick_params(labelsize=9)
 
@@ -600,20 +609,24 @@ def sensitivity_heatmap():
         # Use the "EV Coupled" column when present, else EV constant
         members  = [r["members_2033"] for r in g7]
         ev_vals  = [(r.get("ev_coupled") or r.get("ev_const") or 0) / 1000 for r in g7]
-        labels   = [(r.get("lens") or "")[:32] for r in g7]
+        def _clean(s):
+            s = (s or "").split(" — ")[-1]
+            if s.startswith("Lens "): s = s[5:]
+            return s[:18]
+        labels   = [_clean(r.get("lens")) for r in g7]
         axA.barh(range(len(members)), ev_vals, color=ORANGE, alpha=0.85,
                  edgecolor="white", height=0.7)
         axA.set_yticks(range(len(members)))
-        axA.set_yticklabels(labels, fontsize=8.5)
+        axA.set_yticklabels(labels, fontsize=9)
         axA.invert_yaxis()
         for i, (m, e) in enumerate(zip(members, ev_vals)):
-            axA.text(e + 0.15, i, f"{m:.1f}M → ${e:.1f}B",
+            axA.text(e + 0.12, i, f"{m:.1f}M  ${e:.1f}B",
                      va="center", fontsize=8.5, color=GRAY_BD)
         axA.set_xlabel("DCF Equity ($B)", fontsize=10, color=GRAY_BD)
         axA.set_title("Members lens — 2033 endpoint sensitivity (most material driver)",
                       fontsize=10.5, fontweight="bold", color=DARK, loc="left", pad=8)
         axA.axvline(M["base_equity"]/1000, color=NAVY, linestyle="--", linewidth=1.2)
-        axA.set_xlim(0, max(ev_vals) * 1.30)
+        axA.set_xlim(0, max(ev_vals) * 1.42)
         axA.grid(axis="x", color=GRAY_LT, linewidth=0.5, alpha=0.7)
         axA.set_axisbelow(True)
 
