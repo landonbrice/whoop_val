@@ -116,13 +116,13 @@ def funding_timeline():
         ax.text(i, -1.3, lbl, ha="center", va="top", fontsize=10.5, color=DARK, fontweight="bold")
         ax.text(i, -2.0, dt, ha="center", va="top", fontsize=9, color=GRAY_FT, family="monospace")
         txt = f"${v:.1f}B" if v >= 1 else f"${v*1000:.0f}M"
-        ax.text(i, v + 0.55, txt, ha="center", fontsize=11, color=col, fontweight="bold")
-    ax.annotate("", xy=(6, 9.4), xytext=(5, 4.0),
+        ax.text(i, v * 1.45, txt, ha="center", fontsize=11, color=col, fontweight="bold")
+    ax.annotate("", xy=(5.88, 8.6), xytext=(2.6, 5.0),
                 arrowprops=dict(arrowstyle="->", color=ORANGE, lw=1.6,
-                                connectionstyle="arc3,rad=-0.18"))
-    ax.text(5.5, 6.2, "+2.8× step-up\n5.5× revenue growth\nmultiple compressed\n18× → 9×",
-            ha="center", fontsize=9.5, color=ORANGE, fontweight="bold",
-            bbox=dict(facecolor="#FFF7F0", edgecolor=ORANGE, boxstyle="round,pad=0.4", linewidth=1))
+                                connectionstyle="arc3,rad=0.0"))
+    ax.text(1.4, 5.0, "+2.8× step-up  ·  5.5× revenue growth\nmultiple compressed 18× → 9×",
+            ha="center", va="center", fontsize=9.5, color=ORANGE, fontweight="bold",
+            bbox=dict(facecolor="#FFF7F0", edgecolor=ORANGE, boxstyle="round,pad=0.35", linewidth=1))
     ax.set_yscale("symlog", linthresh=0.05)
     ax.set_ylim(-2.5, 18)
     ax.set_xlim(-0.5, len(rounds) - 0.5)
