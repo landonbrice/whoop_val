@@ -402,23 +402,29 @@ def tornado():
     ax.barh(y, bull_deltas, left=center, color=BULL, alpha=0.85,
             edgecolor="white", height=0.6, label="Bull input")
     for i, (lo, hi) in enumerate(zip(bear_deltas, bull_deltas)):
-        ax.text(center + lo - 0.15, i, f"${center+lo:.1f}B", ha="right",
+        ax.text(center + lo - 0.2, i, f"${center+lo:.1f}B", ha="right",
                 va="center", fontsize=9.5, color=GRAY_BD)
-        ax.text(center + hi + 0.15, i, f"${center+hi:.1f}B", ha="left",
+        ax.text(center + hi + 0.2, i, f"${center+hi:.1f}B", ha="left",
                 va="center", fontsize=9.5, color=GRAY_BD)
     ax.axvline(center, color=DARK, linewidth=1.8)
-    ax.text(center, n - 0.4, f"  Neutral ${center:.2f}B",
-            ha="left", fontsize=10.5, color=DARK, fontweight="bold")
     ax.axvline(10.10, color=SERIESG, linestyle="--", linewidth=1.4)
-    ax.text(10.10, -0.7, " Series G $10.10B", color=SERIESG,
-            ha="left", fontsize=10, fontweight="bold")
     ax.set_yticks(y)
     ax.set_yticklabels(labels, fontsize=11)
     ax.invert_yaxis()
     ax.set_xlim(7.0, 18.5)
+    ax.set_ylim(n + 0.2, -0.5)
     ax.set_xlabel("DCF Equity Value ($B)", fontsize=11.5, color=DARK)
     ax.set_title("Tornado — Members dominates by ~3× the next driver",
                  fontsize=14, fontweight="bold", color=DARK, loc="left", pad=14)
+    # Anchor labels below the bars: Series G left of its line, Neutral right of its line
+    ax.text(10.10 - 0.1, n - 0.1, "Series G $10.10B", color=SERIESG,
+            ha="right", va="center", fontsize=10, fontweight="bold",
+            bbox=dict(facecolor="white", edgecolor=SERIESG,
+                      boxstyle="round,pad=0.22", linewidth=1))
+    ax.text(center + 0.1, n - 0.1, f"Neutral ${center:.2f}B",
+            ha="left", va="center", fontsize=10.5, color=DARK, fontweight="bold",
+            bbox=dict(facecolor="white", edgecolor=DARK,
+                      boxstyle="round,pad=0.22", linewidth=1))
     ax.legend(loc="lower right", frameon=True, fontsize=10)
     ax.grid(axis="x", color=GRAY_LT, linewidth=0.6, alpha=0.7)
     ax.set_axisbelow(True)
