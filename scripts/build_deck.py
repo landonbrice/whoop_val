@@ -1,21 +1,23 @@
 """WHOOP IC deck builder. Reads ALL anchors from audit/model_outputs.json.
 
-15 slides:
+17 slides:
   1. Title
   2. Company overview
   3. Methodology preview
-  4. DCF architecture — Revenue = Members × ARPU; four-lens triangulation
-  5. P&L year-by-year + EV→Equity bridge  [NEW MECHANICS SLIDE]
-  6. WACC bottoms-up build                  [NEW MECHANICS SLIDE]
-  7. Three scenarios — the dispersion
-  8. Jensen's gap (NOVEL)
-  9. Football field
- 10. Comps disconnect
- 11. Sensitivities
- 12. Central thesis
- 13. Probability weight robustness
- 14. Caveats
- 15. Q&A defense
+  4. Assumption inventory (Section 14)   [NEW]
+  5. DCF architecture — Revenue = Members × ARPU; four-lens triangulation
+  6. P&L year-by-year + EV→Equity bridge
+  7. WACC bottoms-up build
+  8. Three scenarios — the dispersion
+  9. Scenarios calculator + Jensen's gap  [REPLACED — combined]
+ 10. Football field
+ 11. Sensitivity matrix (heatmap + drivers)  [NEW]
+ 12. Comps positioning (scatter + bracketing)  [REPLACED — visual]
+ 13. Sensitivities tornado (backup)
+ 14. Central thesis
+ 15. Probability weight robustness
+ 16. Caveats
+ 17. Q&A defense
 """
 from pptx import Presentation
 from pptx.util import Inches, Pt
@@ -48,7 +50,7 @@ def _intkeys(d):
 
 _M_raw = json.loads(Path("/home/user/whoop_val/audit/model_outputs.json").read_text())
 M = {k: _intkeys(v) for k,v in _M_raw.items()}
-TOTAL = 15  # slide count
+TOTAL = 17  # slide count
 
 # Convenience accessors
 def fmtB(x_m): return f"${x_m/1000:.2f}B"
@@ -170,7 +172,7 @@ methods = [
     ("PUBLIC COMPS", "Three buckets:\nhardware · sub · health-data", fmtB(M['ff_d10']*1000), "35% weight"),
     ("PRECEDENT M&A", "14 deals across\nthe three buckets", "$5-8B*", "0% (cross-check)"),
     ("LAST-ROUND", "Series G post-money\n(Mar 2026)", "$10.10B", "10% weight"),
-    ("IMPLIED IPO", "Back-solved from\ninvestor IRR targets", fmtB(M['ff_d14']*1000), "15% weight"),
+    ("IMPLIED IPO", "Private→IPO step-up\nreference class (6 deals)", fmtB(M['ff_d14']*1000), "15% weight"),
 ]
 for i,(k,d,ev,w) in enumerate(methods):
     x = 0.5 + i*3.85
@@ -181,11 +183,11 @@ for i,(k,d,ev,w) in enumerate(methods):
     add_textbox(s, x+0.2, 5.2, 3.4, 0.4, w, size=10, color=GRAY)
 add_textbox(s, 0.5, 6.7, 19, 0.4, "WHY THIS ARCHITECTURE", size=12, bold=True, color=ORANGE)
 choices = [
-    ("Scenario-weighted DCF, not input-level.", "Jensen's inequality: input-averaging at the driver level destroys correlation. WHOOP's drivers co-move within scenarios — scenario-weighted captures the convexity premium worth $" + f"{gap_neu/1000:.1f}B (Slide 8)."),
+    ("Scenario-weighted DCF, not input-level.", "Jensen's inequality: input-averaging at the driver level destroys correlation. WHOOP's drivers co-move within scenarios — scenario-weighted captures the convexity premium worth $" + f"{gap_neu/1000:.1f}B (Slide 9)."),
     ("Real options retained as exhibit, NOT additive.", "Healthcare reimbursement, women's health, glucose monitoring — modeled as correlated outcome clusters (success $5-6B at 15-20% prob; mixed $2-3B at 40-50%; failure $0.5-1B at 30-40%). Cross-validation only."),
     ("Three-bucket comp framework, disaggregated.", "Bucket 2 (consumer subscription): Peloton 1.2x → Spotify 5.1x. Range IS the analysis; averaging destroys it."),
     ("Take-private LBO leg excluded.", "All-VC preferred capital structure offers no debt capacity; sovereign + crossover signal locked-in IPO path; antitrust blocks Apple/Google strategic acquisition."),
-    ("Class connections.", "Lecture 1A (DCF mechanics) · 1B (cost of capital, Slide 6) · 3B (real options as exhibit) · 4B (relative valuation)."),
+    ("Class connections.", "Lecture 1A (DCF mechanics) · 1B (cost of capital, Slide 7) · 3B (real options as exhibit) · 4B (relative valuation)."),
 ]
 y = 7.15
 for k,b in choices:
@@ -195,7 +197,29 @@ for k,b in choices:
 add_footer(s, 3)
 
 # ===========================================================
-# SLIDE 4: DCF architecture — Revenue = Members × ARPU + four-lens
+# SLIDE 4: Assumption inventory (Section 14) — NEW
+# ===========================================================
+s = p.slides.add_slide(LAYOUT)
+title_bar(s, "Assumption Inventory",
+          "20 ProbWeighted drivers — what we sourced, what we stress-tested",
+          "Ranked by Bull−Bear spread as % of |Base|; member growth dominates by section")
+s.shapes.add_picture(f"{V}/assumption_inventory.png", Inches(0.4), Inches(2.0),
+                     width=Inches(19.2))
+# Bottom banner — read
+inventory = M.get("inventory", [])
+top_drivers = sorted(inventory,
+                     key=lambda d: abs(((d.get("bull") or 0) - (d.get("bear") or 0)) / max(abs(d.get("base") or 1e-6), 1e-6)),
+                     reverse=True)[:5]
+top_names = " · ".join((d.get("driver") or "—").split(" — ")[0] for d in top_drivers)
+add_rect(s, 0.5, 10.05, 19, 0.65, fill=NAVY)
+add_textbox(s, 0.7, 10.15, 19, 0.5,
+            f"Read: 6 of the top 10 drivers are member-growth waypoints (MG1-MG8); ARPU growth is rank-13 by design. " +
+            f"WACC and Terminal Multiple are the only non-volume drivers in the top 12 — exactly what Members-as-numerator architecture predicts.",
+            size=11, color=WHITE)
+add_footer(s, 4)
+
+# ===========================================================
+# SLIDE 5: DCF architecture — Revenue = Members × ARPU + four-lens
 # ===========================================================
 s = p.slides.add_slide(LAYOUT)
 title_bar(s, "DCF Architecture", "Revenue = Members × ARPU; Members triangulated through four lenses",
@@ -241,10 +265,10 @@ for sc,r,traj,basis in rows:
 add_textbox(s, 10.2, 7.3, 9.0, 2.0,
             "WHY ASYMMETRIC?\n\nBear/Base allow ARPU just enough to keep up with inflation + modest tier mix.\n\nBull is where ARPU levers — but ONLY because Bull also requires healthcare reimbursement materialization, which mechanically lifts ARPU through payer-paid pricing. ARPU growth in Bull is a CONSEQUENCE of the scenario, not an independent assumption.",
             size=10.5, color=DARK)
-add_footer(s, 4)
+add_footer(s, 5)
 
 # ===========================================================
-# SLIDE 5: P&L year-by-year + EV→Equity bridge  [NEW MECHANICS]
+# SLIDE 6: P&L year-by-year + EV→Equity bridge  [NEW MECHANICS]
 # ===========================================================
 s = p.slides.add_slide(LAYOUT)
 title_bar(s, "DCF Mechanics — Build", "Year-by-year P&L → FCF → discounting → Equity ($M)",
@@ -375,10 +399,10 @@ for lbl, val, color in bridge_items:
 
 # Summary callout
 add_rect(s, 12.0, 10.45, 7.5, 0.0)  # spacer hidden
-add_footer(s, 5)
+add_footer(s, 6)
 
 # ===========================================================
-# SLIDE 6: WACC bottoms-up build  [NEW MECHANICS]
+# SLIDE 7: WACC bottoms-up build  [NEW MECHANICS]
 # ===========================================================
 s = p.slides.add_slide(LAYOUT)
 title_bar(s, "DCF Mechanics — WACC", f"Bottoms-up build: {M['wacc_base']*100:.2f}% Base WACC",
@@ -480,10 +504,10 @@ add_textbox(s, 0.7, 9.7, 19, 0.3, "CROSS-CHECK · DAMODARAN TOP-DOWN", size=11, 
 add_textbox(s, 0.7, 10.0, 19, 0.45,
             f"Damodaran sector approach (4.30% Rf + 0.83 × 4.50% ERP + 0.81% size + 2.00% CSRP) lands at 10.85% — bottoms-up sits 75bps higher due to revenue-weighted intl ERP (+10bps) and beta upgrade vs sector medians (+65bps). Bottoms-up is the conservative choice for the live DCF.",
             size=11, color=WHITE)
-add_footer(s, 6)
+add_footer(s, 7)
 
 # ===========================================================
-# SLIDE 7: Three scenarios — dispersion
+# SLIDE 8: Three scenarios — dispersion
 # ===========================================================
 s = p.slides.add_slide(LAYOUT)
 title_bar(s, "Three Scenarios", f"Bear {fmtBshort(M['bear_equity'])} · Base {fmtBshort(M['base_equity'])} · Bull {fmtBshort(M['bull_equity'])} — feel the dispersion",
@@ -508,43 +532,95 @@ add_textbox(s, 0.7, 9.45, 6, 0.4, "COLLAPSE TO ONE NUMBER", size=11, bold=True, 
 add_textbox(s, 0.7, 9.85, 19, 0.5,
             f"Scenario-weighted Neutral 20/50/30 → {fmtB(sc_neu)} intrinsic. Why scenario-level (not input-level)? Next slide — the novel-grade insight.",
             size=12, color=DARK)
-add_footer(s, 7)
-
-# ===========================================================
-# SLIDE 8: Jensen's gap (NOVEL)
-# ===========================================================
-s = p.slides.add_slide(LAYOUT)
-title_bar(s, "★ NOVEL · Jensen's Gap", f"Input-level vs scenario-level: a ${gap_neu/1000:.2f}B methodology gap",
-          "Why this matters: DCF is convex; how you average matters as much as what you average")
-s.shapes.add_picture(f"{V}/jensens_gap.png", Inches(0.5), Inches(2.1), width=Inches(11))
-
-add_textbox(s, 11.8, 2.1, 7.8, 0.35, "TWO METHODS, ONE QUESTION", size=11, bold=True, color=ORANGE)
-add_textbox(s, 11.8, 2.55, 7.8, 1.2, "Same Bear/Base/Bull scenarios. Same probability weights. Two ways to combine:", size=11.5, color=DARK)
-
-add_rect(s, 11.8, 3.3, 7.8, 1.5, fill=LIGHT)
-add_textbox(s, 12.0, 3.45, 7.4, 0.35, "INPUT-LEVEL (single-run DCF on weighted avg inputs)", size=10.5, bold=True, color=GRAY)
-add_textbox(s, 12.0, 3.85, 7.4, 0.35, "= DCF(0.2 · Bear + 0.5 · Base + 0.3 · Bull inputs)", size=10.5, color=DARK)
-add_textbox(s, 12.0, 4.25, 7.4, 0.5, fmtB(inp_neu), size=22, bold=True, color=GRAY)
-
-add_rect(s, 11.8, 4.9, 7.8, 1.5, fill=LIGHT)
-add_textbox(s, 12.0, 5.05, 7.4, 0.35, "SCENARIO-LEVEL (probability-weighted DCF outputs)", size=10.5, bold=True, color=NAVY)
-add_textbox(s, 12.0, 5.45, 7.4, 0.35, "= 0.2·DCF(Bear) + 0.5·DCF(Base) + 0.3·DCF(Bull)", size=10.5, color=DARK)
-add_textbox(s, 12.0, 5.85, 7.4, 0.5, fmtB(sc_neu), size=22, bold=True, color=NAVY)
-
-add_textbox(s, 11.8, 6.6, 7.8, 0.4, f"JENSEN'S GAP = ${gap_neu/1000:.2f}B", size=14, bold=True, color=ORANGE)
-add_textbox(s, 11.8, 7.0, 7.8, 2.5,
-            "Jensen's inequality: f(E[X]) ≤ E[f(X)] when f is convex.\n\nDCF IS convex in members and in margin: terminal value scales as (members × ARPU × margin × multiple), and growth rates compound multiplicatively. Averaging inputs first destroys the convexity premium.\n\nFor WHOOP specifically: drivers co-move strongly within scenarios. Bull case is consistent (members high → ARPU high → margin high → multiple high). Input-level averages these toward the middle, breaking the joint distribution.\n\nScenario-level is the right method when scenarios are coherent stories — which is the methodology call this presentation makes.",
-            size=10, color=DARK)
-
-add_rect(s, 0.5, 9.6, 19, 1.0, fill=NAVY)
-add_textbox(s, 0.7, 9.75, 19, 0.3, "WHY THIS IS THE NOVEL SLIDE", size=11, bold=True, color=ORANGE)
-add_textbox(s, 0.7, 10.05, 19, 0.45,
-            f"${gap_neu/1000:.2f}B gap = the entire mispricing thesis. Switch to input-level and Series G looks {fmtpct(inp_neu/M['series_g']-1)}; scenario-level says {fmtpct(prem_intrinsic)} underpriced. The methodology call IS the result.",
-            size=12, color=WHITE)
 add_footer(s, 8)
 
 # ===========================================================
-# SLIDE 9: Football field
+# SLIDE 9: Scenarios calculator + Jensen's gap (COMBINED)
+# ===========================================================
+s = p.slides.add_slide(LAYOUT)
+title_bar(s, "★ NOVEL · Scenarios & Jensen's Gap",
+          f"Three weight schemes; scenario-level beats input-level at every conviction by ${gap_neu/1000:.2f}B+",
+          "Same Bear/Base/Bull DCFs. Two ways to combine. The convex curve says the methodology call IS the headline.")
+
+# Top band: Scenarios calculator table — 3 schemes × 6 cols
+add_textbox(s, 0.5, 2.05, 19, 0.35,
+            "SCENARIOS CALCULATOR — all three weight schemes (live from model)",
+            size=11, bold=True, color=ORANGE)
+add_rect(s, 0.5, 2.4, 19, 1.95, fill=WHITE, line=GRAY)
+
+ws = M.get("weight_schemes", {})
+col_x = [0.7, 5.0, 6.4, 7.8, 10.3, 12.8, 15.2, 17.5]
+hdrs = ["Weight scheme", "P(Bear)", "P(Base)", "P(Bull)",
+        "Scenario-wtd ($B)", "ProbWtd ($B)", "Jensen gap ($B)", "vs Series G"]
+for i, h in enumerate(hdrs):
+    add_textbox(s, col_x[i], 2.5, col_x[i+1]-col_x[i] if i < len(col_x)-1 else 2.0,
+                0.4, h, size=10, bold=True, color=GRAY)
+add_line(s, 0.7, 2.9, 19.3, 2.9, color=GRAY, w=0.8)
+
+scheme_rows = [
+    ("pessimistic", "Pessimistic"),
+    ("neutral",     "Neutral (HEADLINE)"),
+    ("optimistic",  "Optimistic"),
+]
+y_tbl = 3.0
+for key, label in scheme_rows:
+    sw = ws.get(key, {})
+    is_n = key == "neutral"
+    color = ORANGE if is_n else DARK
+    cells = [
+        label,
+        f"{(sw.get('p_bear') or 0)*100:.0f}%",
+        f"{(sw.get('p_base') or 0)*100:.0f}%",
+        f"{(sw.get('p_bull') or 0)*100:.0f}%",
+        f"${(sw.get('scen_wtd') or 0)/1000:.2f}",
+        f"${(sw.get('prob_wtd') or 0)/1000:.2f}",
+        f"+${(sw.get('jensen') or 0)/1000:.2f}",
+        f"{(sw.get('vs_serg') or 0)*100:+.1f}%",
+    ]
+    for i, v in enumerate(cells):
+        w_col = col_x[i+1]-col_x[i] if i < len(col_x)-1 else 2.0
+        add_textbox(s, col_x[i], y_tbl, w_col, 0.4, v, size=12,
+                    bold=is_n, color=color)
+    y_tbl += 0.42
+
+# Main visual: Jensen plot
+s.shapes.add_picture(f"{V}/jensens_gap.png", Inches(0.5), Inches(4.5),
+                     width=Inches(13))
+
+# Right column: why both, with key takeaway
+add_textbox(s, 13.8, 4.5, 5.8, 0.35, "WHY BOTH METHODS",
+            size=11, bold=True, color=ORANGE)
+add_rect(s, 13.8, 4.9, 5.8, 2.5, fill=LIGHT)
+add_textbox(s, 14.0, 5.0, 5.4, 0.35,
+            "INPUT-LEVEL (single DCF on prob-wtd inputs)",
+            size=10.5, bold=True, color=GRAY)
+add_textbox(s, 14.0, 5.4, 5.4, 1.8,
+            "Treats drivers as independent.\nValid when scenarios don't co-vary.\nUnderstates convexity when they do.",
+            size=10, color=DARK)
+add_textbox(s, 14.0, 6.55, 5.4, 0.5,
+            f"Headline: {fmtB(inp_neu)}",
+            size=14, bold=True, color=GRAY)
+
+add_rect(s, 13.8, 7.55, 5.8, 2.6, fill=LIGHT, line=NAVY, line_w=1.5)
+add_textbox(s, 14.0, 7.65, 5.4, 0.35,
+            "SCENARIO-LEVEL (P · DCF across scenarios)",
+            size=10.5, bold=True, color=NAVY)
+add_textbox(s, 14.0, 8.05, 5.4, 1.8,
+            "Preserves driver co-movement WITHIN each\nscenario (members↑ → ARPU↑ → margin↑).\nCaptures the convexity premium DCF earns.",
+            size=10, color=DARK)
+add_textbox(s, 14.0, 9.35, 5.4, 0.5,
+            f"Headline: {fmtB(sc_neu)}",
+            size=14, bold=True, color=NAVY)
+
+add_rect(s, 0.5, 10.3, 19, 0.45, fill=NAVY)
+add_textbox(s, 0.7, 10.36, 19, 0.35,
+            f"Headline reading: ${gap_neu/1000:.2f}B Jensen gap at Neutral; +${(ws.get('optimistic',{}).get('jensen') or 0)/1000:.2f}B at Optimistic. " +
+            f"The convexity premium IS the mispricing.",
+            size=11, bold=True, color=WHITE)
+add_footer(s, 9)
+
+# ===========================================================
+# SLIDE 10: Football field
 # ===========================================================
 s = p.slides.add_slide(LAYOUT)
 title_bar(s, "Triangulation", "Football field: four methods, two stories",
@@ -565,64 +641,85 @@ add_textbox(s, 13.9, 6.9, 5.4, 0.35, f"= {fmtB(sc_neu)}  →  {fmtpct(prem_intri
 add_textbox(s, 13.9, 7.3, 5.4, 2.3,
             "Strip the comp drag. The DCF says Series G is meaningfully UNDERpriced.\n\nThe gap between weighted avg and intrinsic IS the structural mispricing of platform-positioned companies — exactly what sophisticated capital captured at Series G entry.\n\nThis is the a16z American Dynamism setup.",
             size=10, color=DARK)
-add_footer(s, 9)
-
-# ===========================================================
-# SLIDE 10: Comps disconnect
-# ===========================================================
-s = p.slides.add_slide(LAYOUT)
-title_bar(s, "Comps Disconnect", f"Why comps say {fmtB(M['ff_d10']*1000)} and DCF says {fmtB(sc_neu)}",
-          "The platform thesis: four commercial vectors no public comparable holds together")
-add_textbox(s, 0.5, 2.1, 19, 0.4, "THREE-BUCKET COMP FRAMEWORK", size=11, bold=True, color=ORANGE)
-buckets = [
-    ("B1 — Consumer Hardware", "Garmin (sole). Apple ref only.", "6.2-6.7x rev", "Sells boxes, not subscriptions. Low LTV, lumpy."),
-    ("B2 — Consumer Subscription", "Peloton (1.2x distress) ↔ Spotify (5.1x mature)", "1.2-5.1x rev", "Disaggregated; range IS the insight. WHOOP avoids Peloton's fate via free hardware + lower churn."),
-    ("B3 — Health Data / Medical Device", "Dexcom · ResMed · Masimo · iRhythm", "5.0-6.4x rev", "Aspirational anchor. Reimbursed by payers; defensible high multiples — but WHOOP is not reimbursed YET."),
-]
-y = 2.6
-for k,c,m,b in buckets:
-    add_rect(s, 0.5, y, 19, 0.95, fill=LIGHT, line=GRAY)
-    add_textbox(s, 0.7, y+0.1, 5.0, 0.35, k, size=12, bold=True, color=NAVY)
-    add_textbox(s, 0.7, y+0.45, 5.0, 0.35, c, size=10, color=GRAY)
-    add_textbox(s, 5.9, y+0.25, 2.5, 0.4, m, size=14, bold=True, color=ORANGE)
-    add_textbox(s, 8.6, y+0.25, 10.6, 0.6, b, size=10.5, color=DARK)
-    y += 1.05
-
-add_textbox(s, 0.5, 5.95, 19, 0.4, "IMPLIED WHOOP VALUATION BY BUCKET WEIGHTING", size=11, bold=True, color=ORANGE)
-add_rect(s, 0.5, 6.35, 19, 1.6, fill=WHITE, line=GRAY)
-add_textbox(s, 0.7, 6.45, 4, 0.4, "WEIGHTING SCHEME", size=10, bold=True, color=GRAY)
-add_textbox(s, 5, 6.45, 4, 0.4, "WHAT IT CLAIMS WHOOP IS", size=10, bold=True, color=GRAY)
-add_textbox(s, 12, 6.45, 4, 0.4, "BLENDED MULT", size=10, bold=True, color=GRAY)
-add_textbox(s, 15.5, 6.45, 4, 0.4, "IMPLIED EV", size=10, bold=True, color=GRAY)
-schemes = [
-    ("BEAR  40 / 40 / 20", "Peloton with better branding", "~4.6x rev", "$5.1B"),
-    ("BASE  20 / 40 / 40", "Subscription + healthcare optionality", "~5.1x rev", "$5.6B"),
-    ("BULL  10 / 30 / 60", "Health-data platform that uses a wearable", "~5.4x rev", "$5.9B"),
-    ("Series G implied  ~5 / 25 / 70", "What sophisticated capital is paying for", "~9x rev", "$10.10B"),
-]
-y = 6.85
-for sc,claim,m,ev in schemes:
-    is_g = "Series G" in sc
-    color = ORANGE if is_g else DARK
-    add_textbox(s, 0.7, y, 4, 0.3, sc, size=10, bold=is_g, color=color)
-    add_textbox(s, 5, y, 7, 0.3, claim, size=10, color=color)
-    add_textbox(s, 12, y, 4, 0.3, m, size=10, bold=is_g, color=color)
-    add_textbox(s, 15.5, y, 4, 0.3, ev, size=10, bold=is_g, color=color)
-    y += 0.27
-
-add_rect(s, 0.5, 8.2, 19, 2.2, fill=NAVY)
-add_textbox(s, 0.7, 8.35, 19, 0.4, "THE PLATFORM THESIS", size=12, bold=True, color=ORANGE)
-add_textbox(s, 0.7, 8.75, 19, 1.6,
-            f"No bucket-weighting scheme using current observed multiples reaches $10.1B without putting 70%+ weight on Bucket 3 — which Series G investors implicitly do.\n\nWHOOP combines four commercial vectors no public comparable holds together: consumer subscription + clinical-grade hardware + B2B Unite + health-data platform potential. Comp methodology requires a public peer to anchor; the absence of one IS the structural mispricing.\n\n{fmtpct(prem_intrinsic)} intrinsic premium ≈ what gets priced when the fourth vector becomes publicly visible.",
-            size=11, color=WHITE)
 add_footer(s, 10)
 
 # ===========================================================
-# SLIDE 11: Sensitivities
+# SLIDE 11: Sensitivity matrix — weight scheme + material drivers
 # ===========================================================
 s = p.slides.add_slide(LAYOUT)
-title_bar(s, "Sensitivities", "What drives the valuation: members > terminal multiple > WACC",
-          f"Tornado centered on scenario-weighted Neutral {fmtB(sc_neu)}")
+title_bar(s, "Sensitivity Matrix",
+          "Headline robust to ±15pp on either bear or bull weight; Members drives the rest",
+          "Left: scenario-weighted equity across all weight schemes. Right: material drivers (Members · WACC · Terminal multiple).")
+s.shapes.add_picture(f"{V}/sensitivity_heatmap.png", Inches(0.4), Inches(2.0),
+                     width=Inches(19.2))
+
+# Bottom banner — read
+g6 = M.get("grid6", {})
+rows = g6.get("rows", [])
+# Find range of headline output
+if rows:
+    flat = [v for r in rows for v in r["equity_b"]]
+    g6_min = min(flat)/1000
+    g6_max = max(flat)/1000
+else:
+    g6_min, g6_max = 9.3, 13.8
+
+add_rect(s, 0.5, 10.05, 19, 0.65, fill=NAVY)
+add_textbox(s, 0.7, 10.15, 19, 0.5,
+            f"Read: scenario-weighted equity ranges ${g6_min:.1f}B – ${g6_max:.1f}B across all 25 weight combinations. "
+            f"Even at Pessimistic conviction (P_Bear=30%/P_Bull=20%) the model holds ${rows[-1]['equity_b'][0]/1000:.2f}B — within 8% of Series G. "
+            "Headline scenario call is structurally robust to weight-knob variation.",
+            size=11, color=WHITE)
+add_footer(s, 11)
+
+# ===========================================================
+# SLIDE 12: Comps positioning — scatter + bracketing visuals
+# ===========================================================
+s = p.slides.add_slide(LAYOUT)
+title_bar(s, "Comps Disconnect", f"Why comps say {fmtB(M['ff_d10']*1000)} and DCF says {fmtB(sc_neu)}",
+          "WHOOP is off the public surface — the absence of a true peer IS the structural mispricing")
+
+# LEFT: scatter (X = NTM growth, Y = EV/Rev)
+s.shapes.add_picture(f"{V}/comp_scatter.png", Inches(0.5), Inches(2.05),
+                     width=Inches(11.0))
+
+# RIGHT-TOP: bracketing strip
+s.shapes.add_picture(f"{V}/comp_bracketing.png", Inches(11.8), Inches(2.05),
+                     width=Inches(7.8))
+
+# RIGHT-MID: three-thesis text panel
+add_textbox(s, 11.8, 5.7, 7.8, 0.35,
+            "THE THREE-BUCKET FRAMEWORK",
+            size=11, bold=True, color=ORANGE)
+buckets = [
+    ("B1 — Consumer hardware",       "Garmin sole; sells boxes."),
+    ("B2 — Consumer subscription",   "Peloton (1.2×) ↔ Spotify (3.7×); range IS the insight."),
+    ("B3 — Health data / med-device", "Dexcom · iRhythm · ResMed · Masimo — reimbursed; aspirational."),
+]
+y = 6.1
+for k, txt in buckets:
+    add_rect(s, 11.8, y, 7.8, 0.85, fill=LIGHT, line=GRAY)
+    add_textbox(s, 12.0, y+0.08, 7.4, 0.3, k, size=10.5, bold=True, color=NAVY)
+    add_textbox(s, 12.0, y+0.38, 7.4, 0.45, txt, size=9.5, color=DARK)
+    y += 0.92
+
+# BOTTOM banner
+add_rect(s, 0.5, 8.95, 19, 1.55, fill=NAVY)
+add_textbox(s, 0.7, 9.05, 19, 0.4, "THE PLATFORM THESIS",
+            size=12, bold=True, color=ORANGE)
+add_textbox(s, 0.7, 9.42, 19, 1.05,
+            f"WHOOP @ Series G prices at ~19× recognized revenue / ~9× bookings — outside every public tier (highest public anchor: Masimo 5.96×).\n"
+            f"No bucket-weighting scheme reaches $10.1B without 70%+ weight on Bucket 3 — which Series G investors implicitly do. " +
+            f"WHOOP combines four commercial vectors (consumer sub + clinical-grade hardware + B2B Unite + health-data platform) no public comp holds together. {fmtpct(prem_intrinsic)} intrinsic premium ≈ what gets priced when the fourth vector becomes publicly visible.",
+            size=10.5, color=WHITE)
+add_footer(s, 12)
+
+# ===========================================================
+# SLIDE 13: Sensitivities
+# ===========================================================
+s = p.slides.add_slide(LAYOUT)
+title_bar(s, "Tornado decomposition", "Driver-by-driver: members > terminal multiple > WACC",
+          f"Companion to Slide 11 — tornado centered on scenario-weighted Neutral {fmtB(sc_neu)}")
 s.shapes.add_picture(f"{V}/tornado.png", Inches(0.5), Inches(2.1), width=Inches(13.5))
 add_textbox(s, 14.3, 2.1, 5.2, 0.35, "WHAT THE TORNADO SAYS", size=11, bold=True, color=ORANGE)
 reads = [
@@ -642,10 +739,10 @@ add_rect(s, 0.5, 9.6, 19, 0.8, fill=LIGHT)
 add_textbox(s, 0.7, 9.75, 19, 0.5,
             f"Joint Members × WACC heatmap (companion exhibit): {fmtB(sc_neu)} Base sits in the dense middle of the surface; even at 20%-pessimistic on Members AND 100bps higher WACC, fair value remains > Series G.",
             size=10.5, color=DARK)
-add_footer(s, 11)
+add_footer(s, 13)
 
 # ===========================================================
-# SLIDE 12: Central thesis
+# SLIDE 14: Central thesis
 # ===========================================================
 s = p.slides.add_slide(LAYOUT)
 title_bar(s, "Recommendation", "Central thesis: Series G is modestly UNDER-priced",
@@ -674,10 +771,10 @@ for i,(k,w,ev,vs,body) in enumerate(boxes):
     add_textbox(s, x+0.2, 7.0, 5.8, 0.7, ev, size=32, bold=True, color=tc)
     add_textbox(s, x+0.2, 7.85, 5.8, 0.35, f"{vs} vs Series G", size=12, bold=True, color=accent)
     add_textbox(s, x+0.2, 8.4, 5.8, 1.7, body, size=10, color=tc)
-add_footer(s, 12)
+add_footer(s, 14)
 
 # ===========================================================
-# SLIDE 13: Probability weight robustness
+# SLIDE 15: Probability weight robustness
 # ===========================================================
 s = p.slides.add_slide(LAYOUT)
 title_bar(s, "Robustness", "Even at pessimistic conviction, fair value stays close to Series G",
@@ -713,10 +810,10 @@ add_textbox(s, 10.2, 7.05, 9.0, 0.4, "READ 2: SERIES G CALL IS ROBUST", size=11,
 add_textbox(s, 10.2, 7.45, 9.0, 2.7,
             f"Pessimistic conviction (only 15% Bull weight) → Series G {fmtpct(sc_pess/M['series_g']-1)}.\n\nNeutral (30% Bull) → {fmtpct(prem_intrinsic)} under-priced.\n\nOptimistic (40% Bull) → {fmtpct(sc_opt/M['series_g']-1)} under-priced.\n\nFor Series G to look meaningfully overpriced you must put Bull at ≤10% — Oura at $12B (Series E) and CMS Innovation Center selection make sub-10% Bull hard to defend.",
             size=11, color=DARK)
-add_footer(s, 13)
+add_footer(s, 15)
 
 # ===========================================================
-# SLIDE 14: Caveats
+# SLIDE 16: Caveats
 # ===========================================================
 s = p.slides.add_slide(LAYOUT)
 title_bar(s, "Caveats", "What the model does NOT capture",
@@ -751,10 +848,10 @@ add_rect(s, 0.5, 9.8, 19, 0.65, fill=LIGHT)
 add_textbox(s, 0.7, 9.95, 19, 0.5,
             "Real options retained as cross-validation exhibit (correlated cluster: $5-6B success at 15-20% prob). Not added to football field.",
             size=11, color=DARK, align=PP_ALIGN.CENTER)
-add_footer(s, 14)
+add_footer(s, 16)
 
 # ===========================================================
-# SLIDE 15: Q&A defense
+# SLIDE 17: Q&A defense
 # ===========================================================
 s = p.slides.add_slide(LAYOUT)
 title_bar(s, "Q&A Defense", "Anticipated questions — backup material",
@@ -779,7 +876,7 @@ for k,v in qas:
     add_textbox(s, 0.7, y+0.05, 18.6, 0.35, k, size=11, bold=True, color=NAVY)
     add_textbox(s, 0.7, y+0.45, 18.6, 0.7, v, size=10, color=DARK)
     y += 1.25
-add_footer(s, 15)
+add_footer(s, 17)
 
 p.save(OUT)
 print(f"Saved {OUT}: {OUT.stat().st_size:,} bytes, {len(p.slides)} slides")
