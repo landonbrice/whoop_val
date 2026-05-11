@@ -733,7 +733,7 @@ def comp_scatter():
         if ticker == "SONO": offset_x, offset_y =  4,  +0.20
         if ticker == "GPRO": offset_x, offset_y =  4,  -0.50
         if ticker == "DXCM": offset_x, offset_y = -11,  0
-        if ticker == "GRMN": offset_x, offset_y =  4, +0.70
+        if ticker == "GRMN": offset_x, offset_y =  4, -0.55
         if ticker == "RMD":  offset_x, offset_y =  4, -0.40
         if ticker == "MASI": offset_x, offset_y =  4, +0.40
         if ticker == "ROKU": offset_x, offset_y =  4, -0.40
@@ -755,6 +755,10 @@ def comp_scatter():
                alpha=[0.95, 0.55])
     ax.plot([whoop_growth, whoop_growth], [whoop_rec, whoop_book],
             color=ORANGE, linewidth=1.5, linestyle=":", zorder=4)
+    # Inline tag for the lower bookings point (recognized point gets the annotation box)
+    ax.text(whoop_growth + 3.5, whoop_book, f"{whoop_book:.1f}× bookings",
+            fontsize=9.5, color=ORANGE, fontweight="bold", va="center",
+            alpha=0.90, zorder=6)
     ax.annotate(f"WHOOP @ Series G\n{whoop_rec:.1f}× recognized\n{whoop_book:.1f}× bookings",
                 xy=(whoop_growth, whoop_rec),
                 xytext=(whoop_growth - 50, whoop_rec - 2),
@@ -822,9 +826,9 @@ def comp_bracketing():
         ax.barh(i, 0.10, left=med - 0.05, height=0.55, color=col,
                 edgecolor="white", linewidth=1.2)
         # Endpoint labels
-        ax.text(lo - 0.3, i, f"{lo:.2f}×", va="center", ha="right",
+        ax.text(lo - 0.55, i, f"{lo:.2f}×", va="center", ha="right",
                 fontsize=10, color=GRAY_BD)
-        ax.text(hi + 0.3, i, f"{hi:.2f}×", va="center", ha="left",
+        ax.text(hi + 0.55, i, f"{hi:.2f}×", va="center", ha="left",
                 fontsize=10, color=GRAY_BD)
         ax.text(med, i + 0.36, f"Median {med:.2f}×", ha="center",
                 fontsize=10, color=col, fontweight="bold")
@@ -832,11 +836,13 @@ def comp_bracketing():
     # Series G implied lines — labels placed BELOW the lines to avoid title clash
     ax.axvline(sg_book, color=ORANGE, linestyle="--", linewidth=2.0, alpha=0.9)
     ax.text(sg_book, -0.62, f"Series G @ bookings\n{sg_book:.1f}×",
-            color=ORANGE, fontsize=10, fontweight="bold", va="top", ha="center")
+            color=ORANGE, fontsize=10, fontweight="bold", va="top", ha="center",
+            bbox=dict(facecolor="white", edgecolor="none", pad=2.5))
 
     ax.axvline(sg_rec, color=DARK, linestyle=":", linewidth=2.0, alpha=0.9)
     ax.text(sg_rec, -0.62, f"Series G @ recognized\n{sg_rec:.1f}×",
-            color=DARK, fontsize=10, fontweight="bold", va="top", ha="center")
+            color=DARK, fontsize=10, fontweight="bold", va="top", ha="center",
+            bbox=dict(facecolor="white", edgecolor="none", pad=2.5))
 
     ax.set_yticks(range(n))
     ax.set_yticklabels([t[0] for t in theses], fontsize=10.5, color=DARK)
